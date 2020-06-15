@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
+    <DefaultItemExcludes>$(DefaultItemExcludes);**/*.js</DefaultItemExcludes>    
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <RazorCompileOnBuild>true</RazorCompileOnBuild>
+    <RazorCompileOnPublish>true</RazorCompileOnPublish>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Adriva.Web.Controls" Version="2.1.20.4" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="2.2.0" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <EmbeddedResource Include="**/*.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\Adriva.Extensions.Reports\Adriva.Extensions.Reports.csproj" />
+    <ProjectReference Include="..\Adriva.Extensions.Reports.Files\Adriva.Extensions.Reports.Files.csproj" />
+    <ProjectReference Include="..\Adriva.Web.Controls\Adriva.Web.Controls.csproj" />
+  </ItemGroup>
+</Project>

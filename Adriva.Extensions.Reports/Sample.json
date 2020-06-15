@@ -1,0 +1,135 @@
+{
+    "title": "Sample Report",
+    "baseReport": "base",
+    "queries": {
+        "getDistinctSuppliers": {
+            "command": "SELECT DISTINCT Supplier FROM [dbo].[Promotion] ORDER BY Supplier",
+            "slidingExpiration": "00:00:20"
+        },
+        "getPromotions": {
+            //"command": "EXEC DummyReportProc @supplier, @date, @pageIndex, @pageSize"
+            "command": "SELECT TOP 5 [Supplier], DATEPART(MM, [CreatedOn]) Month, COUNT(1) Total FROM Promotion GROUP BY [Supplier], DATEPART(MM, [CreatedOn]) ORDER BY [Supplier], [Month]"
+        },
+        "getDate": {
+            "command": "SELECT CAST(@currentId AS BIGINT)"
+        }
+    },
+    "filters": [
+        {
+            "name": "supplier",
+            "title": "Tukkan",
+            "isrequired": true,
+            "dataSource": "defaultSQLServer",
+            "query": "getDistinctSuppliers",
+            "rendererOptions": {
+                "mvc": {
+                    "properties": {
+                        "prop1": "prop1 value",
+                        "prop2": "prop2 value"
+                    }
+                }
+            }
+        },
+        {
+            "name": "date",
+            "title": "Tarih",
+            "dataType": "DateTime"
+        },
+        {
+            "name": "id",
+            "defaultValue": 12,
+            "type": "Constant",
+            "dataType": "Int32"
+        },
+        {
+            "name": "dt",
+            "defaultValue": "01/10/2020",
+            "type": "Constant",
+            "dataType": "DateTime"
+        }
+    ],
+    "output": {
+        "dataSource": "defaultSQLServer",
+        "query": "getPromotions",
+        "paging": {
+            "pageSize": 20,
+            "pageIndexParameter": "pageIndex",
+            "pageSizeParameter": "pageSize"
+        },
+        "rendererOptions": {
+            "mvc": {
+                "controlHeight": 650,
+                "hasFixedHeaders": false
+            },
+            "mvcChart": {
+                "height": 800,
+                "chartType": "Bar"
+            }
+        },
+        "columnDefinitions": [
+            {
+                "title": "Id",
+                "field": "Id",
+                "minWidth": 100,
+                "width": 100,
+                "format": "N2"
+            },
+            {
+                "title": "Supplier",
+                "field": "Supplier",
+                "minWidth": 150,
+                "width": 200,
+                "alignment": "left",
+                "rendererOptions": {
+                    "mvcChart": {
+                        "isSeriesName": true
+                    }
+                }
+            },
+            {
+                "title": "Ay",
+                "field": "Month",
+                "rendererOptions": {
+                    "mvcChart": {
+                        "isXAxisTitle": true
+                    }
+                }
+            },
+            {
+                "title": "Toplam",
+                "field": "Total",
+                "rendererOptions": {
+                    "mvcChart": {
+                        "isValue": true
+                    }
+                }
+            },
+            {
+                "title": "Name",
+                "field": "Name",
+                "minWidth": 30,
+                "alignment": "center"
+            },
+            {
+                "title": "Date",
+                "field": "CreatedOn",
+                "minWidth": 120,
+                "width": 150,
+                "format": "dd MMM HH:mm"
+            },
+            {
+                "field": "Name",
+                "title": "Template Example",
+                "minWidth": 150,
+                "width": 150,
+                "rendererOptions": {
+                    "mvc": {
+                        "formatter": "TestApplication.Controllers.HomeController:SampleFormatter, TestApplication",
+                        "priority": 10
+                    },
+                    "excelTemplate": {}
+                }
+            }
+        ]
+    }
+}

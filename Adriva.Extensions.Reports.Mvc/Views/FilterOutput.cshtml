@@ -1,0 +1,18 @@
+@using Adriva.Extensions.Reports
+@using Adriva.Extensions.Reports.Mvc
+@model FilterOutput<MvcFilterRendererOptions>
+
+<h3>@this.Model.ReportDefinition.Title</h3>
+<hr />
+@foreach (var filterItem in this.Model.Where(x => ParameterType.Filter == x.Definition.Type))
+{
+    <div class="form-group">
+        <label>@(filterItem.Definition.Title ?? filterItem.Definition.Name)</label>
+        @if (string.IsNullOrWhiteSpace(filterItem.RendererOptions?.View)){
+            <input type="text" name="@filterItem.Definition.Name" class="form-control" @(filterItem.Definition.IsRequired ? "required" : string.Empty) />
+        }
+        else {
+            <partial name="@(filterItem.RendererOptions.View)" for="@filterItem" />
+        }
+    </div>        
+}

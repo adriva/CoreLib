@@ -1,0 +1,14 @@
+[
+    {
+        "id": 1,
+        "group": "Deneme",
+        "expression": "x=>{return  x.Hour <= 12;}",
+        "tag": "IsValidDateTime"
+    },
+    {
+        "id": 2,
+        "parentId": 1,
+        "group": "Deneme",
+        "expression": "z => 1 == z.Second % 2"
+    }
+]
