@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Adriva.Extensions.Reports\Adriva.Extensions.Reports.csproj" />
+    <ProjectReference Include="..\Adriva.Extensions.Documents\Adriva.Extensions.Documents.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+</Project>
