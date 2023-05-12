@@ -1,0 +1,125 @@
+@addTagHelper *, Adriva.Web.Controls
+@using Adriva.Extensions.Reports
+@using Adriva.Extensions.Reports.Mvc
+@inject Microsoft.Extensions.Options.IOptions<MvcRendererOptions> Options
+@model ReportOutput
+@{
+    int GetPriority(ReportColumnDefinition columnDefinition, int defaultPriority){
+        var columnOptions = columnDefinition.GetRendererOptions<MvcColumnOptions>(MvcRenderer.RendererName);
+        return null == columnOptions ? defaultPriority : Math.Max(columnOptions.Priority, 0);
+    }
+
+    int loop = 1;
+    object gridDataSource = null;
+    var options = this.Model.Definition.Output.GetRendererOptions<MvcOutputOptions>(MvcRenderer.RendererName);
+    options.PageSizes = options.PageSizes ?? new[]{ 5, 20, 50};
+    
+    if (string.IsNullOrWhiteSpace(this.Options.Value.DataApiUrl)){
+        gridDataSource = Html.Raw(MvcRenderer.GetJsonData(this.Model));
+    }
+    else {
+        gridDataSource = Microsoft.AspNetCore.WebUtilities.QueryHelpers.AddQueryString(this.Options.Value.DataApiUrl, this.Model.FilterValues);
+    }
+}
+<grid class="table-class" autoload="true" responsive="true" 
+            fixedheader="@options.HasFixedHeaders"
+            resizeCheckInterval="501"
+            datasource="@gridDataSource"
+            header="@this.Model.Title"
+            primarykey="ID"
+            showHiddenColumnsAsDetails="@this.Model.ColumnDefinitons.Any(c => 0 < c.MinWidth)"
+            readycallback="gridReady"
+            height="@Math.Max(0, options.ControlHeight)"
+            pageIndexParameter="@this.Model.Definition.Output.Paging?.PageIndexParameter"
+            pageSizeParamter="@this.Model.Definition.Output.Paging?.PageSizeParameter"
+            >
+    @foreach (var column in this.Model.ColumnDefinitons)
+    {        
+        var columnOptions = column.GetRendererOptions<MvcColumnOptions>(MvcRenderer.RendererName);
+
+        <grid-column field="@column.Field.ToUpperInvariant()" minwidth="@column.MinWidth" priority="@(GetPriority(column, loop++))"  width="@column.Width" title="@column.Title" alignment="@column.Alignment.ToGridColumnAlignment()">
+            @if(!string.IsNullOrWhiteSpace(columnOptions?.Renderer)){
+                <column-renderer>@columnOptions?.Renderer</column-renderer>
+            }
+        </grid-column>
+    }
+    <grid-pager pagesize="@this.Model.Definition.Output.Paging.PageSize" sizes="@string.Join(",", options.PageSizes)"></grid-pager>        
+</grid>
+<script>
+    var hb = function (value, record, $cell, $displayEl){
+        $(value).appendTo($displayEl);
+        $displayEl.css('background', 'red');
+    };
+</script>
+<script>
+    var reportGrids = reportGrids || {};
+
+    function gridReady(g){
+        reportGrids['@this.Model.Name'] = g;
+        g['reportName'] = '@this.Model.Name';
+
+        jQuery(g).on('click', '.report-command', function(){
+            var self = jQuery(this);
+            var commandParameterKey = 'parameter';
+            var postData = {};
+
+            postData['Command'] = self.data('command');
+            postData['DataSource'] = self.data('source-name');
+
+            if (!postData['Command'] || !postData['Command'].length) return;
+
+            var dataset = self.prop('dataset');
+            if (dataset){
+                for (var key in dataset) { 
+                    if (key.toLowerCase().startsWith(commandParameterKey)){
+                        var propertyName = key.substr(commandParameterKey.length, key.length);
+                        var propertyValue = dataset[key];
+                        postData[propertyName] = propertyValue;
+                    }
+                }
+            }
+            
+            var event = new Event('gridcommand');
+            event.detail = {
+                data: postData,
+                grid: g
+            };
+
+            document.dispatchEvent(event);
+        });
+    }
+    
+    document.addEventListener('gridcommand', function (e){
+        var queryName = e.detail.data.Command;
+        var dataSourceName = e.detail.data.DataSource;
+        delete e.detail.data['Command'];
+        delete e.detail.data['DataSource'];
+        $.ajax({
+            url: '@this.Options.Value.CommandApiUrl?name=' + e.detail.grid.reportName + '&queryName=' + queryName + '&dataSource=' + dataSourceName,
+            type: 'POST',
+            dataType: 'json',
+            contentType: 'application/json; charset=utf-8',
+            data: JSON.stringify(e.detail.data),
+            success: function(response){
+                var successEvent = new Event('gridcommandexecuted');
+                successEvent.detail = {
+                    request: e.detail,
+                    response: response,
+                    status: 'success'
+                };
+
+                document.dispatchEvent(successEvent);
+            },
+            error: function(xhr, status, error){
+                var errorEvent = new Event('gridcommandexecuted');
+                errorEvent.detail = {
+                    request: e.detail,
+                    response: error,
+                    status: 'error'
+                };
+
+                document.dispatchEvent(errorEvent);
+            }
+        });        
+    });
+</script>

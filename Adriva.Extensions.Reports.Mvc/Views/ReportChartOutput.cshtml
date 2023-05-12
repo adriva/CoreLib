@@ -1,0 +1,16 @@
+@addTagHelper *, Adriva.Web.Controls
+@using Adriva.Extensions.Reports.Mvc
+@inject Microsoft.Extensions.Options.IOptions<MvcRendererOptions> Options
+@model MvcReportChartOutput
+@{
+    var options = this.Model.Definition.Output.GetRendererOptions<MvcChartOutputOptions>(MvcChartRenderer.RendererName);
+    options.Height = -1 <  options.Height ? options.Height : 400;
+}
+<chart height="@options.Height" colorscheme="brewerPaired12" type="@options.ChartType">
+    <chart-data series-names="@string.Join(",", this.Model.XAxisTitles)">
+        @foreach (var series in this.Model.Series)
+        {
+            <chart-dataset title="@series.Title" data="@series.Values" type="@options.ChartType" />  
+        }
+    </chart-data>
+</chart>
